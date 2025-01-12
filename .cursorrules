@@ -1,0 +1,14 @@
+-   Use React 19 for building the extension UI with functional components and hooks.
+-   Follow Manifest V3 specifications for all Chrome extension setup and permissions.
+-   Write clean, maintainable, and commented code using JSDoc for JavaScript, ensuring code clarity.
+-   Use efficient bundling with Vite for optimized builds.
+-   Implement responsive UI design using TailwindCSS.
+-   Leverage Zustand for state management to manage extension state efficiently.
+-   Optimize performance using React.lazy() and Suspense for code splitting and lazy loading of components.
+-   Ensure accessibility and user-friendly settings in the extension's options UI.
+-   Use consistent naming conventions: PascalCase for component names, camelCase for variables.
+-   Organize files systematically: structure components, hooks, and utility functions methodically.
+-   Utilize ESLint and Prettier for maintaining code quality and consistent formatting.
+-   Test the extension thoroughly across different devices and browsers to ensure reliability.
+-   Provide a detailed README.md for the extension usage and setup instructions.
+-   Safeguard extension security by adhering to Manifest V3 content security policies and best practices.
