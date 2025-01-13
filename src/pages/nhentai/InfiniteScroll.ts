@@ -67,6 +67,12 @@ export class InfiniteScroll {
             // 移除初始的分页器
             pagination.remove()
         }
+
+        // 处理当前页面的图片
+        const container = this.getTargetContainer()
+        if (container) {
+            this.handleLazyImages(container, this.currentPage)
+        }
     }
 
     /**
@@ -179,23 +185,43 @@ export class InfiniteScroll {
         const totalHeight = document.documentElement.scrollHeight
         const scrollPercentage = (scrollPosition / totalHeight) * 100
 
-        // 计算当前查看的页码
+        // 获取当前视口中的页码
         const container = this.getTargetContainer()
         if (container) {
-            const galleries = container.querySelectorAll('.gallery')
-            // 从URL中获取初始页码
-            const url = new URL(window.location.href)
-            const initialPage = parseInt(url.searchParams.get('page') || '1', 10)
+            let currentViewPage = this.currentPage
 
-            let currentViewPage = initialPage
-            galleries.forEach((gallery, index) => {
-                const rect = gallery.getBoundingClientRect()
-                if (rect.top <= window.innerHeight / 2) {
-                    // 计算相对于初始页码的偏移
-                    const pageOffset = Math.floor(index / 25)
-                    currentViewPage = initialPage + pageOffset
+            // 获取所有图片
+            const allImages = document.querySelectorAll('img.lazyload')
+            const containerImages = container.querySelectorAll('img.lazyload')
+
+            // 先检查顶部的图片是否属于容器
+            for (const img of allImages) {
+                const rect = img.getBoundingClientRect()
+                if (rect.top <= window.innerHeight / 2 && rect.bottom >= 0) {
+                    // 检查这个图片是否属于容器
+                    if (container.contains(img)) {
+                        const pageNum = img.getAttribute('data-page')
+                        if (pageNum) {
+                            currentViewPage = parseInt(pageNum, 10)
+                            break
+                        }
+                    } else {
+                        // 如果顶部图片不属于容器，查找视口内的容器图片
+                        for (const containerImg of containerImages) {
+                            const containerImgRect = containerImg.getBoundingClientRect()
+                            if (containerImgRect.top <= window.innerHeight && containerImgRect.bottom >= 0) {
+                                const pageNum = containerImg.getAttribute('data-page')
+                                if (pageNum) {
+                                    currentViewPage = parseInt(pageNum, 10)
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    break
                 }
-            })
+            }
+
             this.updatePageIndicator(currentViewPage)
         }
 
@@ -261,8 +287,9 @@ export class InfiniteScroll {
     /**
      * 处理懒加载图片
      * @param container 包含懒加载图片的容器
+     * @param pageNum 当前页码
      */
-    private static handleLazyImages(container: Element | DocumentFragment): void {
+    private static handleLazyImages(container: Element | DocumentFragment, pageNum: number): void {
         const lazyImages = container.querySelectorAll('img.lazyload')
         lazyImages.forEach((img) => {
             if (img instanceof HTMLImageElement) {
@@ -270,6 +297,8 @@ export class InfiniteScroll {
                 if (dataSrc) {
                     img.src = dataSrc
                     img.removeAttribute('data-src')
+                    // 添加页码属性
+                    img.setAttribute('data-page', pageNum.toString())
                 }
             }
         })
@@ -340,8 +369,8 @@ export class InfiniteScroll {
                 }
             })
 
-            // 处理懒加载图片
-            this.handleLazyImages(fragment)
+            // 处理懒加载图片，传入页码
+            this.handleLazyImages(fragment, nextPage)
 
             currentContainer.appendChild(fragment)
             this.currentPage = nextPage
