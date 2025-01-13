@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client'
+import { runConcurrently } from '../../utils/runConcurrently'
 import './style.css'
 
 /**
@@ -8,6 +8,91 @@ import './style.css'
 function parseHTML(html: string): Document {
     const parser = new DOMParser()
     return parser.parseFromString(html, 'text/html')
+}
+
+/**
+ * 创建占位盒子
+ * @param pageNum 页码
+ * @param totalPages 总页数
+ * @returns 包含占位盒子的包装器元素
+ */
+function createPlaceholder(pageNum: number, totalPages: number): HTMLDivElement {
+    // 创建图片包装器
+    const imgWrapper = document.createElement('div')
+    imgWrapper.className = 'single-image-wrapper'
+    imgWrapper.id = `image-wrapper-${pageNum}`
+
+    // 添加页码提示
+    const pageNumDiv = document.createElement('div')
+    pageNumDiv.className = 'page-number'
+    pageNumDiv.textContent = `${pageNum} / ${totalPages}`
+    imgWrapper.appendChild(pageNumDiv)
+
+    // 添加占位盒子
+    const placeholder = document.createElement('div')
+    placeholder.className = 'image-placeholder'
+    imgWrapper.appendChild(placeholder)
+
+    return imgWrapper
+}
+
+/**
+ * 加载单张图片
+ * @param galleryId 画廊ID
+ * @param pageNum 页码
+ * @param totalPages 总页数
+ * @returns Promise，在图片加载完成时resolve
+ */
+async function loadImage(galleryId: string, pageNum: number, totalPages: number): Promise<void> {
+    const imgWrapper = document.getElementById(`image-wrapper-${pageNum}`)
+    if (!imgWrapper) return
+
+    return new Promise(async (resolve, reject) => {
+        try {
+            // 获取图片页面
+            console.log('开始加载HTML', pageNum)
+            const response = await fetch(`/g/${galleryId}/${pageNum}/`)
+            const html = await response.text()
+            console.log('HTML加载完成', pageNum)
+
+            const doc = parseHTML(html)
+            const imageContainer = doc.querySelector('#image-container img')
+
+            if (!imageContainer) {
+                throw new Error('找不到图片元素')
+            }
+
+            const img = document.createElement('img')
+            img.src = imageContainer.getAttribute('src') || ''
+            img.className = 'single-mode-image'
+            img.style.display = 'none' // 初始隐藏图片
+
+            // 图片加载完成后替换占位盒子
+            img.onload = () => {
+                const placeholder = imgWrapper.querySelector('.image-placeholder')
+                if (placeholder) {
+                    placeholder.remove()
+                }
+                img.style.display = 'block'
+                console.log('图片加载完成', pageNum)
+                resolve()
+            }
+
+            // 图片加载失败时reject
+            img.onerror = () => {
+                reject(new Error(`图片加载失败: ${pageNum}`))
+            }
+
+            imgWrapper.appendChild(img)
+        } catch (error) {
+            console.error(`加载第 ${pageNum} 页时出错:`, error)
+            const placeholder = imgWrapper.querySelector('.image-placeholder')
+            if (placeholder) {
+                placeholder.textContent = `加载失败: ${error instanceof Error ? error.message : String(error)}`
+            }
+            reject(error)
+        }
+    })
 }
 
 /**
@@ -29,52 +114,26 @@ async function fetchAndInsertImages(galleryId: string, totalPages: number, start
     container.appendChild(loadingTip)
 
     try {
-        // 从指定页码开始循环请求每一页
+        // 先创建所有占位盒子
         for (let i = startPage; i <= totalPages; i++) {
-            const response = await fetch(`/g/${galleryId}/${i}/`)
-            const html = await response.text()
-            const doc = parseHTML(html)
-
-            // 查找图片元素
-            const imageContainer = doc.querySelector('#image-container img')
-            if (imageContainer) {
-                const imgWrapper = document.createElement('div')
-                imgWrapper.className = 'single-image-wrapper'
-
-                // 添加页码提示
-                const pageNum = document.createElement('div')
-                pageNum.className = 'page-number'
-                pageNum.textContent = `${i} / ${totalPages}`
-                imgWrapper.appendChild(pageNum)
-
-                // 添加图片
-                const img = document.createElement('img')
-                img.src = imageContainer.getAttribute('src') || ''
-                img.className = 'single-mode-image'
-                /**
-                 * 图片加载完成后的处理函数
-                 * 确保图片按比例缩放到视口高度的90%
-                 */
-                img.onload = () => {
-                    const viewportHeight = window.innerHeight
-                    const imageRatio = img.naturalWidth / img.naturalHeight
-                    const maxHeight = viewportHeight * 0.9
-
-                    if (img.naturalHeight > maxHeight) {
-                        img.style.height = `${maxHeight}px`
-                        img.style.width = `${maxHeight * imageRatio}px`
-                    }
-                }
-                imgWrapper.appendChild(img)
-
-                container.appendChild(imgWrapper)
-            }
-
-            // 更新加载进度
-            loadingTip.textContent = `加载中... ${i}/${totalPages}`
+            const imgWrapper = createPlaceholder(i, totalPages)
+            container.appendChild(imgWrapper)
         }
+
+        // 创建所有图片加载任务函数
+        const loadTasks = Array.from({ length: totalPages - startPage + 1 }, (_, index) => {
+            const pageNum = startPage + index
+            return () =>
+                loadImage(galleryId, pageNum, totalPages).then(() => {
+                    loadingTip.textContent = `加载中... ${pageNum}/${totalPages}`
+                    return pageNum
+                })
+        })
+
+        // 使用并发控制函数，限制最多同时加载6张图片
+        await runConcurrently(loadTasks, 6)
     } finally {
-        // 移除加载提示
+        // 所有图片加载完成后移除加载提示
         loadingTip.remove()
     }
 }
