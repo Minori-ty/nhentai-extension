@@ -1,14 +1,8 @@
--   Use React 19 for building the extension UI with functional components and hooks.
--   Follow Manifest V3 specifications for all Chrome extension setup and permissions.
--   Write clean, maintainable, and commented code using JSDoc for JavaScript, ensuring code clarity.
--   Use efficient bundling with Vite for optimized builds.
--   Implement responsive UI design using TailwindCSS.
--   Leverage Zustand for state management to manage extension state efficiently.
--   Optimize performance using React.lazy() and Suspense for code splitting and lazy loading of components.
--   Ensure accessibility and user-friendly settings in the extension's options UI.
--   Use consistent naming conventions: PascalCase for component names, camelCase for variables.
--   Organize files systematically: structure components, hooks, and utility functions methodically.
--   Utilize ESLint and Prettier for maintaining code quality and consistent formatting.
--   Test the extension thoroughly across different devices and browsers to ensure reliability.
--   Provide a detailed README.md for the extension usage and setup instructions.
--   Safeguard extension security by adhering to Manifest V3 content security policies and best practices.
+1. Check if "项目结构.md" and "功能实现.md" exist in the root directory. If not, create them.
+2. After implementing each requirement, update "功能实现.md" with the details of the functionality implemented. If a new file is created, update "项目结构.md" with a tree structure explaining the purpose of each file.
+3. Before implementing any code, review the codebase along with "功能实现.md" and "项目结构.md" to avoid redundant implementations and file creations.
+4. Add comments to all variables, functions, and expressions declared with var, let, or const. Use jsdoc for JavaScript, tsdoc for TypeScript, single-line comments for CSS, region tags for HTML, and /// for Prisma code.
+5. Do not add or remove any existing features.
+6. Do not modify any functionalities that are not specified.
+7. If any uncertainties arise, consult with me before making changes to the code.
+8. 用中文回答

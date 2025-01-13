@@ -43,7 +43,7 @@
 
 /* 单图模式容器 */
 .single-mode-container {
-    max-width: 1200px;
+    width: fit-content;
     margin: 0 auto;
     padding: 20px;
     background-color: #1f1f1f;
@@ -54,14 +54,18 @@
     position: relative;
     margin-bottom: 30px;
     text-align: center;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* 单图模式图片 */
 .single-mode-image {
-    max-width: 100%;
-    height: auto;
+    max-height: 90vh;
+    width: auto;
     display: block;
     margin: 0 auto;
+    object-fit: contain;
 }
 
 /* 页码提示 */

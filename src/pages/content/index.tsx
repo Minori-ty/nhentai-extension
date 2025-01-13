@@ -14,8 +14,9 @@ function parseHTML(html: string): Document {
  * 获取所有图片并插入到页面
  * @param galleryId 画廊ID
  * @param totalPages 总页数
+ * @param startPage 起始页码
  */
-async function fetchAndInsertImages(galleryId: string, totalPages: number) {
+async function fetchAndInsertImages(galleryId: string, totalPages: number, startPage: number) {
     // 创建容器
     const container = document.createElement('div')
     container.className = 'single-mode-container'
@@ -28,8 +29,8 @@ async function fetchAndInsertImages(galleryId: string, totalPages: number) {
     container.appendChild(loadingTip)
 
     try {
-        // 循环请求每一页
-        for (let i = 1; i <= totalPages; i++) {
+        // 从指定页码开始循环请求每一页
+        for (let i = startPage; i <= totalPages; i++) {
             const response = await fetch(`/g/${galleryId}/${i}/`)
             const html = await response.text()
             const doc = parseHTML(html)
@@ -50,6 +51,20 @@ async function fetchAndInsertImages(galleryId: string, totalPages: number) {
                 const img = document.createElement('img')
                 img.src = imageContainer.getAttribute('src') || ''
                 img.className = 'single-mode-image'
+                /**
+                 * 图片加载完成后的处理函数
+                 * 确保图片按比例缩放到视口高度的90%
+                 */
+                img.onload = () => {
+                    const viewportHeight = window.innerHeight
+                    const imageRatio = img.naturalWidth / img.naturalHeight
+                    const maxHeight = viewportHeight * 0.9
+
+                    if (img.naturalHeight > maxHeight) {
+                        img.style.height = `${maxHeight}px`
+                        img.style.width = `${maxHeight * imageRatio}px`
+                    }
+                }
                 imgWrapper.appendChild(img)
 
                 container.appendChild(imgWrapper)
@@ -78,9 +93,15 @@ function handleSingleMode() {
         const totalPages = parseInt(numPagesElement.textContent || '0', 10)
         console.log('总页数:', totalPages)
 
-        // 获取画廊ID
+        // 获取画廊ID和当前页码
         const pathSegments = window.location.pathname.split('/')
         const galleryId = pathSegments[2]
+        /**
+         * 从URL路径中获取起始页码
+         * 例如：/g/549553/startPage/
+         */
+        const startPage = parseInt(pathSegments[3], 10) || 1
+        console.log('起始页码:', startPage)
 
         // 移除content内容
         const contentElement = document.querySelector('#content')
@@ -89,7 +110,7 @@ function handleSingleMode() {
         }
 
         // 开始获取和插入图片
-        fetchAndInsertImages(galleryId, totalPages)
+        fetchAndInsertImages(galleryId, totalPages, startPage)
     }
 }
 
