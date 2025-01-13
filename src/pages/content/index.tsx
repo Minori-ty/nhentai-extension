@@ -1,4 +1,43 @@
+// 保存原始的console方法
+const originalConsole = {
+    log: console.log.bind(console),
+    error: console.error.bind(console),
+    warn: console.warn.bind(console),
+    info: console.info.bind(console),
+    debug: console.debug.bind(console),
+}
+
+// 防止console被清除
+Object.defineProperties(console, {
+    log: {
+        get: () => originalConsole.log,
+        set: () => {},
+        configurable: false,
+    },
+    error: {
+        get: () => originalConsole.error,
+        set: () => {},
+        configurable: false,
+    },
+    warn: {
+        get: () => originalConsole.warn,
+        set: () => {},
+        configurable: false,
+    },
+    info: {
+        get: () => originalConsole.info,
+        set: () => {},
+        configurable: false,
+    },
+    debug: {
+        get: () => originalConsole.debug,
+        set: () => {},
+        configurable: false,
+    },
+})
+
 import { SinglePage } from '../nhentai/SinglePage'
+import { InfiniteScroll } from '../nhentai/InfiniteScroll'
 import './style.css'
 
 /**
@@ -40,7 +79,7 @@ function initPage(): void {
             SinglePage.init()
             break
         case PageType.List:
-            // 后续实现滚动加载功能
+            InfiniteScroll.init()
             break
     }
 }
