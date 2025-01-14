@@ -176,15 +176,6 @@ export class InfiniteScroll {
      * 处理滚动事件
      */
     private static handleScroll(): void {
-        // 如果正在加载或已经到达最后一页，则不处理
-        if (this.isLoading || this.currentPage >= this.totalPages) {
-            return
-        }
-
-        const scrollPosition = window.scrollY + window.innerHeight
-        const totalHeight = document.documentElement.scrollHeight
-        const scrollPercentage = (scrollPosition / totalHeight) * 100
-
         // 获取当前视口中的页码
         const container = this.getTargetContainer()
         if (container) {
@@ -225,6 +216,15 @@ export class InfiniteScroll {
             this.updatePageIndicator(currentViewPage)
         }
 
+        // 如果正在加载或已经到达最后一页，不触发加载
+        if (this.isLoading || this.currentPage >= this.totalPages) {
+            return
+        }
+
+        const scrollPosition = window.scrollY + window.innerHeight
+        const totalHeight = document.documentElement.scrollHeight
+        const scrollPercentage = (scrollPosition / totalHeight) * 100
+
         if (scrollPercentage > this.SCROLL_THRESHOLD) {
             this.loadNextPage()
         }
@@ -252,7 +252,16 @@ export class InfiniteScroll {
     private static addLoadingIndicator(): HTMLDivElement {
         const loadingDiv = document.createElement('div')
         loadingDiv.className = 'infinite-scroll-loading'
-        loadingDiv.textContent = '加载中...'
+
+        // 创建加载动画
+        const spinner = document.createElement('div')
+        spinner.className = 'loading-spinner'
+        loadingDiv.appendChild(spinner)
+
+        // 创建文本
+        const text = document.createElement('span')
+        text.textContent = '加载中...'
+        loadingDiv.appendChild(text)
 
         const container = this.getTargetContainer()
         if (!container) {
@@ -274,7 +283,7 @@ export class InfiniteScroll {
 
         const endDiv = document.createElement('div')
         endDiv.className = 'infinite-scroll-end'
-        endDiv.textContent = '已经到底了'
+        endDiv.textContent = '- 已经没有了 -'
 
         const container = this.getTargetContainer()
         if (!container) {
@@ -382,14 +391,27 @@ export class InfiniteScroll {
             }
         } catch (error) {
             console.error('加载下一页失败:', error)
-            loadingIndicator.textContent = '加载失败，正在重试...'
+            // 移除原有内容
+            loadingIndicator.innerHTML = ''
+
+            // 添加错误文本
+            const errorText = document.createElement('span')
+            errorText.textContent = '加载失败，正在重试...'
+            loadingIndicator.appendChild(errorText)
 
             if (retryCount < this.MAX_RETRIES) {
                 await new Promise((resolve) => setTimeout(resolve, this.RETRY_DELAY))
                 return this.loadNextPage(retryCount + 1)
             }
 
-            loadingIndicator.textContent = `加载失败: ${error instanceof Error ? error.message : String(error)}`
+            // 移除原有内容
+            loadingIndicator.innerHTML = ''
+
+            // 添加错误文本
+            const finalErrorText = document.createElement('span')
+            finalErrorText.textContent = `加载失败: ${error instanceof Error ? error.message : String(error)}`
+            loadingIndicator.appendChild(finalErrorText)
+
             setTimeout(() => loadingIndicator.remove(), 3000)
         } finally {
             this.isLoading = false

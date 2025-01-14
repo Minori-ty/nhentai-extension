@@ -172,11 +172,11 @@ export class SinglePage {
         if (!favoriteBtn) return
 
         const singleImageBtn = document.createElement('button')
+        singleImageBtn.id = 'scroll-mode'
         singleImageBtn.className = 'btn btn-primary'
-        singleImageBtn.style.marginLeft = '10px'
         singleImageBtn.innerHTML = `
-            <i class="fas fa-image"></i>
-            <span class="text">单图模式</span>
+            <i class="fa fa-scroll"></i>
+            <span class="text">滚动浏览</span>
         `
 
         singleImageBtn.addEventListener('click', () => {

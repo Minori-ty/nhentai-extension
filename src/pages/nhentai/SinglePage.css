@@ -81,3 +81,18 @@
     color: #666;
     font-size: 1.2rem;
 }
+
+button#scroll-mode.btn.btn-primary {
+    margin-left: 0 !important;
+    background-color: #4caf50 !important;
+    border-color: #4caf50 !important;
+}
+
+button#scroll-mode.btn.btn-primary:hover {
+    background-color: #388e3c !important;
+    border-color: #388e3c !important;
+}
+
+button#scroll-mode.btn.btn-primary .fa {
+    margin-right: 5px;
+}
