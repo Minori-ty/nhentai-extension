@@ -19,6 +19,7 @@ export class SinglePage {
     /**
      * 解析HTML字符串
      * @param html HTML字符串
+     * @returns 解析后的Document对象
      */
     private static parseHTML(html: string): Document {
         const parser = new DOMParser()
@@ -120,6 +121,8 @@ export class SinglePage {
         loadingTip.textContent = '加载中...'
         container.appendChild(loadingTip)
 
+        let loadedImagesCount = 0
+
         try {
             for (let i = startPage; i <= totalPages; i++) {
                 const imgWrapper = this.createPlaceholder(i, totalPages)
@@ -130,7 +133,8 @@ export class SinglePage {
                 const pageNum = startPage + index
                 return () =>
                     this.loadImage(galleryId, pageNum, totalPages).then(() => {
-                        loadingTip.textContent = `加载中... ${pageNum}/${totalPages}`
+                        loadedImagesCount++
+                        loadingTip.textContent = `加载中... ${loadedImagesCount}/${totalPages}`
                         return pageNum
                     })
             })
